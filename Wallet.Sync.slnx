@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Wallet.Sync.BudgetBakers.Host/Wallet.Sync.BudgetBakers.Host.csproj" />
+  <Project Path="Wallet.Sync.BudgetBakers/Wallet.Sync.BudgetBakers.csproj" Id="eaca8dc5-cf4b-4790-956c-6a98411108a0" />
+  <Project Path="Wallet.Sync.Core/Wallet.Sync.Core.csproj" Id="0558bb6c-f6cc-46e9-a7ce-dc8041344dcf" />
+  <Project Path="Wallet.Sync.Data.EfCore/Wallet.Sync.Data.EfCore.csproj" Id="3d8be762-cddc-4b61-a9be-f2917951fc21" />
+  <Project Path="Wallet.Sync.Data/Wallet.Sync.Data.csproj" Id="bb44c507-f7f3-46a9-960f-20326cbbf3dd" />
+</Solution>
