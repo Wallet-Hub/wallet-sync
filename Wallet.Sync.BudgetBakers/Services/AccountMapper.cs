@@ -13,10 +13,11 @@ namespace Wallet.Sync.BudgetBakers.Services
         {
             return new DataAccount
             {
-                ExternalId = source.Id ?? string.Empty,
+                ExternalId = source.Id!,
                 CurrencyCode = source.CurrencyCode ?? string.Empty,
                 Name = source.Name ?? string.Empty,
                 Type = source.AccountType?.ToString() ?? string.Empty,
+                Color = source.Color,
                 CreatedAt = source.CreatedAt ?? default,
                 UpdatedAt = source.UpdatedAt ?? default
             };

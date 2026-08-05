@@ -1,62 +1,47 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Wallet.Sync.Core.Services;
+using System.Threading.Tasks;
 using BudgetBakers.Wallet.Net.Models;
-using BudgetBakers.Wallet.Net.Services.Clients;
 using BudgetBakers.Wallet.Net.Models.Account;
+using BudgetBakers.Wallet.Net.Services.Clients;
 using FluentResults;
 using Microsoft.Extensions.Logging;
+using Wallet.Sync.BudgetBakers.Models;
+using Wallet.Sync.Core.Services;
 
 namespace Wallet.Sync.BudgetBakers.Services
 {
     public class AccountRetriever : IExternalEntityRetriever<Account, AccountFilter>
     {
         private readonly AccountClient _accountClient;
-        private readonly ILogger<AccountRetriever> _logger;
+        private readonly PagedEntityFetcher<Account, AccountFilter> _pagedFetcher;
 
-        public AccountRetriever(AccountClient client, ILogger<AccountRetriever> logger)
+        public AccountRetriever(AccountClient accountClient, ILogger<AccountRetriever> logger)
         {
-            _accountClient = client;
-            _logger = logger;
+            _accountClient = accountClient;
+            _pagedFetcher = new PagedEntityFetcher<Account, AccountFilter>(FetchPageAsync, logger);
         }
 
-        public async Task<Result<IList<Account>>> RetrieveAsync(AccountFilter filter)
+        public Task<Result<IList<Account>>> RetrieveAsync(AccountFilter filter) => _pagedFetcher.RetrieveAllAsync(filter);
+
+        private async Task<Result<EntityPage<Account>>> FetchPageAsync(AccountFilter filter, int offset)
         {
-            List<Account> retrievedAccounts = [];
-            int offset = 0;
-            bool hasMorePages;
+            AccountType? accountType = filter.Type is null ? null : (AccountType)Enum.Parse(typeof(AccountType), filter.Type, true);
 
-            do
+            GetAccountsRequest accountsRequest = new()
             {
-                AccountType? accountType = filter.Type is null ? null : (AccountType)Enum.Parse(typeof(AccountType), filter.Type, true);
+                Ids = filter.Ids,
+                AccountType = accountType,
+                Offset = offset,
+                Limit = filter.PageLength
+            };
 
-                _logger.LogDebug("Retrieving accounts with offset: {Offset}, limit: {Limit}", offset, filter.PageLength);
+            Result<GetAccountsResponse> response = await _accountClient.GetAsync(accountsRequest);
 
-                GetAccountsRequest accountsRequest = new()
-                {
-                    Ids = filter.Ids,
-                    AccountType = accountType,
-                    Offset = offset,
-                    Limit = filter.PageLength
-                };
+            if (response.IsFailed)
+                return Result.Fail(response.Errors);
 
-                Result<GetAccountsResponse> response = await _accountClient.GetAsync(accountsRequest);
-
-                if (response.IsFailed)
-                    return Result.Fail(response.Errors);
-
-                GetAccountsResponse currentPage = response.Value;
-                retrievedAccounts.AddRange(currentPage.Accounts);
-
-                hasMorePages = currentPage.Accounts.Count == filter.PageLength
-                    && (currentPage.Pagination.Total is null || retrievedAccounts.Count < currentPage.Pagination.Total.Value);
-
-                offset = currentPage.Pagination.NextOffset;
-            }
-            while (hasMorePages);
-
-            return Result.Ok<IList<Account>>(retrievedAccounts);
+            return Result.Ok(new EntityPage<Account>(response.Value.Accounts, response.Value.Pagination));
         }
     }
 }

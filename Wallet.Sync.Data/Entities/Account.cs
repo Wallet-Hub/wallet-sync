@@ -12,6 +12,7 @@ namespace Wallet.Sync.Data.Entities
         public string CurrencyCode { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string Type { get; set; } = null!;
+        public string? Color { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
