@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BudgetBakers.Wallet.Net.Models.Account;
 using BudgetBakers.Wallet.Net.Models.Category;
+using BudgetBakers.Wallet.Net.Models.Record;
 using BudgetBakers.Wallet.Net.Services;
 using BudgetBakers.Wallet.Net.Services.Clients;
 using BudgetBakers.Wallet.Net.Utility;
@@ -15,6 +16,7 @@ using Wallet.Sync.BudgetBakers.Services;
 using Wallet.Sync.Core.Services;
 using DataAccount = Wallet.Sync.Data.Entities.Account;
 using DataCategory = Wallet.Sync.Data.Entities.Category;
+using DataRecord = Wallet.Sync.Data.Entities.Record;
 
 namespace Wallet.Sync.BudgetBakers.Host
 {
@@ -30,6 +32,7 @@ namespace Wallet.Sync.BudgetBakers.Host
             builder.Services.AddSingleton<IAccessTokenProvider, ConfigurationAccessTokenProvider>();
             builder.Services.AddWalletClient<AccountClient>();
             builder.Services.AddWalletClient<CategoryClient>();
+            builder.Services.AddWalletClient<RecordClient>();
 
             builder.Services.AddTransient<AccountRetriever>();
             builder.Services.AddTransient<IExternalEntityRetriever<Account, AccountFilter>>(
@@ -39,11 +42,18 @@ namespace Wallet.Sync.BudgetBakers.Host
             builder.Services.AddTransient<IExternalEntityRetriever<Category, CategoryFilter>>(
                 serviceProvider => serviceProvider.GetRequiredService<CategoryRetriever>());
 
+            builder.Services.AddTransient<RecordRetriever>();
+            builder.Services.AddTransient<IExternalEntityRetriever<Record, RecordFilter>>(
+                serviceProvider => serviceProvider.GetRequiredService<RecordRetriever>());
+
             builder.Services.AddSingleton<IEntityMapper<Account, DataAccount>, AccountMapper>();
             builder.Services.AddTransient<MappingEntityRetriever<Account, AccountFilter, DataAccount>>();
 
             builder.Services.AddSingleton<IEntityMapper<Category, DataCategory>, CategoryMapper>();
             builder.Services.AddTransient<MappingEntityRetriever<Category, CategoryFilter, DataCategory>>();
+
+            builder.Services.AddSingleton<IEntityMapper<Record, DataRecord>, RecordMapper>();
+            builder.Services.AddTransient<MappingEntityRetriever<Record, RecordFilter, DataRecord>>();
 
             using IHost host = builder.Build();
 
