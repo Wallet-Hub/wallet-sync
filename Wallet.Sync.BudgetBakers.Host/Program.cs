@@ -8,12 +8,17 @@ using BudgetBakers.Wallet.Net.Services;
 using BudgetBakers.Wallet.Net.Services.Clients;
 using BudgetBakers.Wallet.Net.Utility;
 using FluentResults;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Wallet.Sync.BudgetBakers.Host.Synchronization;
 using Wallet.Sync.BudgetBakers.Models;
 using Wallet.Sync.BudgetBakers.Services;
 using Wallet.Sync.Core.Services;
+using Wallet.Sync.Data.EfCore;
+using Wallet.Sync.Data.EfCore.Repositories;
 using DataAccount = Wallet.Sync.Data.Entities.Account;
 using DataCategory = Wallet.Sync.Data.Entities.Category;
 using DataRecord = Wallet.Sync.Data.Entities.Record;
@@ -27,7 +32,8 @@ namespace Wallet.Sync.BudgetBakers.Host
             HostApplicationBuilder builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(args);
 
             builder.Services.Configure<BudgetBakersOptions>(builder.Configuration.GetSection(BudgetBakersOptions.SectionName));
-            builder.Services.Configure<AccountFilter>(builder.Configuration.GetSection("AccountFilter"));
+            builder.Services.Configure<AccountFilter>(builder.Configuration.GetSection(nameof(AccountFilter)));
+            builder.Services.Configure<CategoryFilter>(builder.Configuration.GetSection(nameof(CategoryFilter)));
 
             builder.Services.AddSingleton<IAccessTokenProvider, ConfigurationAccessTokenProvider>();
             builder.Services.AddWalletClient<AccountClient>();
@@ -55,26 +61,54 @@ namespace Wallet.Sync.BudgetBakers.Host
             builder.Services.AddSingleton<IEntityMapper<Record, DataRecord>, RecordMapper>();
             builder.Services.AddTransient<MappingEntityRetriever<Record, RecordFilter, DataRecord>>();
 
+            builder.Services.AddDbContext<WalletSyncDbContext>(options =>
+                options.UseSqlite(builder.Configuration.GetConnectionString("WalletSync")));
+
+            builder.Services.AddScoped<AccountRepository>();
+            builder.Services.AddScoped<AccountSyncService>();
+
+            builder.Services.AddScoped<CategoryRepository>();
+            builder.Services.AddScoped<CategorySyncService>();
+
             using IHost host = builder.Build();
 
-            MappingEntityRetriever<Account, AccountFilter, DataAccount> accountEntityRetriever =
-                host.Services.GetRequiredService<MappingEntityRetriever<Account, AccountFilter, DataAccount>>();
-            AccountFilter filter = host.Services.GetRequiredService<IOptions<AccountFilter>>().Value;
-
-            Result<IList<DataAccount>> result = await accountEntityRetriever.RetrieveAsync(filter);
-
-            if (result.IsFailed)
+            using (IServiceScope scope = host.Services.CreateScope())
             {
-                Console.WriteLine("Failed to retrieve accounts:");
-                foreach (IError error in result.Errors)
-                    Console.WriteLine($" - {error.Message}");
+                WalletSyncDbContext dbContext = scope.ServiceProvider.GetRequiredService<WalletSyncDbContext>();
+                await dbContext.Database.EnsureCreatedAsync();
 
-                return;
+                AccountSyncService accountSyncService = scope.ServiceProvider.GetRequiredService<AccountSyncService>();
+                Result result = await accountSyncService.SyncAsync();
+
+                if (result.IsFailed)
+                {
+                    Console.WriteLine("Account sync failed:");
+                    foreach (IError error in result.Errors)
+                        Console.WriteLine($" - {error.Message}");
+
+                    return;
+                }
+
+                Console.WriteLine("Account sync completed successfully.");
+                foreach (DataAccount account in dbContext.Accounts)
+                    Console.WriteLine($" - {account.ExternalId} | {account.Name} ({account.CurrencyCode})");
+
+                CategorySyncService categorySyncService = scope.ServiceProvider.GetRequiredService<CategorySyncService>();
+                Result categoryResult = await categorySyncService.SyncAsync();
+
+                if (categoryResult.IsFailed)
+                {
+                    Console.WriteLine("Category sync failed:");
+                    foreach (IError error in categoryResult.Errors)
+                        Console.WriteLine($" - {error.Message}");
+
+                    return;
+                }
+
+                Console.WriteLine("Category sync completed successfully.");
+                foreach (DataCategory category in dbContext.Categories)
+                    Console.WriteLine($" - {category.ExternalId} | {category.Name} ({category.GroupName})");
             }
-
-            Console.WriteLine($"Retrieved {result.Value.Count} account(s):");
-            foreach (DataAccount account in result.Value)
-                Console.WriteLine($" - {account.ExternalId} | {account.Name} ({account.CurrencyCode})");
         }
     }
 }

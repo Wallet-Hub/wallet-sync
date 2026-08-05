@@ -36,6 +36,17 @@ namespace Wallet.Sync.BudgetBakers.Services
                 Limit = filter.PageLength
             };
 
+            if (filter.MinimumUpdatedAt.HasValue)
+            {
+                DateFilter dateFilter = new()
+                {
+                    Prefix = RangePrefix.GreaterThanOrEqual,
+                    Value = filter.MinimumUpdatedAt.Value
+                };
+
+                accountsRequest.UpdatedAt = [dateFilter];
+            }
+
             Result<GetAccountsResponse> response = await _accountClient.GetAsync(accountsRequest);
 
             if (response.IsFailed)

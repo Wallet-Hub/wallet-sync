@@ -11,9 +11,11 @@
     <ProjectReference Include="..\Wallet.Sync.Core\Wallet.Sync.Core.csproj" />
     <ProjectReference Include="..\Wallet.Sync.Data\Wallet.Sync.Data.csproj" />
     <ProjectReference Include="..\Wallet.Sync.BudgetBakers\Wallet.Sync.BudgetBakers.csproj" />
+    <ProjectReference Include="..\Wallet.Sync.Data.EfCore\Wallet.Sync.Data.EfCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
   </ItemGroup>
 

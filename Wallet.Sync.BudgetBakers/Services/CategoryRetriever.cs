@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BudgetBakers.Wallet.Net.Models;
 using BudgetBakers.Wallet.Net.Models.Category;
 using BudgetBakers.Wallet.Net.Services.Clients;
 using FluentResults;
@@ -29,6 +30,17 @@ namespace Wallet.Sync.BudgetBakers.Services
                 Offset = offset,
                 Limit = filter.PageLength
             };
+
+            if (filter.MinimumUpdatedAt.HasValue)
+            {
+                DateFilter dateFilter = new()
+                {
+                    Prefix = RangePrefix.GreaterThanOrEqual,
+                    Value = filter.MinimumUpdatedAt.Value
+                };
+
+                categoriesRequest.UpdatedAt = [dateFilter];
+            }
 
             Result<GetCategoriesResponse> response = await _categoryClient.GetAsync(categoriesRequest);
 

@@ -40,7 +40,18 @@ namespace Wallet.Sync.BudgetBakers.Services
                     Value = filter.MinimumDate.Value
                 };
 
-                recordsRequest.RecordDate = dateFilter;
+                recordsRequest.RecordDate = [dateFilter];
+            }
+
+            if (filter.MinimumUpdatedAt.HasValue)
+            {
+                DateFilter dateFilter = new()
+                {
+                    Prefix = RangePrefix.GreaterThanOrEqual,
+                    Value = filter.MinimumUpdatedAt.Value
+                };
+
+                recordsRequest.UpdatedAt = [dateFilter];
             }
 
             Result<GetRecordsResponse> response = await _recordClient.GetAsync(recordsRequest);
