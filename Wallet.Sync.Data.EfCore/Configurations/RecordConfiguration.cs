@@ -53,6 +53,9 @@ namespace Wallet.Sync.Data.EfCore.Configurations
             builder.Property(r => r.UpdatedAt)
                 .IsRequired();
 
+            builder.Property(r => r.Note)
+                .HasMaxLength(2048);
+
             builder.Property<bool>("IsDeleted")
                 .IsRequired()
                 .HasDefaultValue(false);
@@ -72,6 +75,10 @@ namespace Wallet.Sync.Data.EfCore.Configurations
                 .HasForeignKey(e => e.RecordId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(r => r.Labels)
+                .WithMany()
+                .UsingEntity(j => j.ToTable("RecordLabels"));
 
             // Account/Category are required navigations that also carry their own
             // shadow "IsDeleted" query filter, so it must be repeated here to avoid

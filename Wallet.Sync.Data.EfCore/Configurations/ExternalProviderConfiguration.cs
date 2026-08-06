@@ -4,11 +4,11 @@ using Wallet.Sync.Data.Entities;
 
 namespace Wallet.Sync.Data.EfCore.Configurations
 {
-    public class ExpenseDocumentProviderConfiguration : IEntityTypeConfiguration<ExpenseDocumentProvider>
+    public class ExternalProviderConfiguration : IEntityTypeConfiguration<ExternalProvider>
     {
-        public void Configure(EntityTypeBuilder<ExpenseDocumentProvider> builder)
+        public void Configure(EntityTypeBuilder<ExternalProvider> builder)
         {
-            builder.ToTable("ExpenseDocumentProviders");
+            builder.ToTable("ExternalProviders");
 
             builder.HasKey(p => p.Id);
 

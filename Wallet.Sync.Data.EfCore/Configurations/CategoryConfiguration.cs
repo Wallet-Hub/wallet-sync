@@ -34,6 +34,9 @@ namespace Wallet.Sync.Data.EfCore.Configurations
             builder.Property(c => c.Color)
                 .HasMaxLength(32);
 
+            builder.Property(c => c.ParentExternalId)
+                .HasMaxLength(128);
+
             builder.Property(c => c.CreatedAt)
                 .IsRequired();
 
@@ -43,6 +46,12 @@ namespace Wallet.Sync.Data.EfCore.Configurations
             builder.Property<bool>("IsDeleted")
                 .IsRequired()
                 .HasDefaultValue(false);
+
+            builder.HasOne(c => c.Parent)
+                .WithMany()
+                .HasForeignKey(c => c.ParentId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasQueryFilter(c => !EF.Property<bool>(c, "IsDeleted"));
         }

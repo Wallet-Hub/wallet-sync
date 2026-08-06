@@ -8,5 +8,6 @@ namespace Wallet.Sync.BudgetBakers.Models
     public class RecordFilter : ExternalEntityFilter
     {
         public DateTime? MinimumDate { get; set; }
+        public DateTime? MaximumDate { get; set; }
     }
 }

@@ -13,6 +13,9 @@ namespace Wallet.Sync.Data.Entities
         public string GroupId { get; set; } = null!;
         public string GroupName { get; set; } = null!;
         public string? Color { get; set; }
+        public int? ParentId { get; set; }
+        public string? ParentExternalId { get; set; }
+        public Category? Parent { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using BudgetBakers.Wallet.Net.Models.Account;
 using BudgetBakers.Wallet.Net.Models.Category;
@@ -7,7 +5,6 @@ using BudgetBakers.Wallet.Net.Models.Record;
 using BudgetBakers.Wallet.Net.Services;
 using BudgetBakers.Wallet.Net.Services.Clients;
 using BudgetBakers.Wallet.Net.Utility;
-using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,10 +27,12 @@ namespace Wallet.Sync.BudgetBakers.Host
         public static async Task Main(string[] args)
         {
             HostApplicationBuilder builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(args);
+            builder.Configuration.AddUserSecrets<Program>();
 
             builder.Services.Configure<BudgetBakersOptions>(builder.Configuration.GetSection(BudgetBakersOptions.SectionName));
             builder.Services.Configure<AccountFilter>(builder.Configuration.GetSection(nameof(AccountFilter)));
             builder.Services.Configure<CategoryFilter>(builder.Configuration.GetSection(nameof(CategoryFilter)));
+            builder.Services.Configure<RecordFilter>(builder.Configuration.GetSection(nameof(RecordFilter)));
 
             builder.Services.AddSingleton<IAccessTokenProvider, ConfigurationAccessTokenProvider>();
             builder.Services.AddWalletClient<AccountClient>();
@@ -70,44 +69,50 @@ namespace Wallet.Sync.BudgetBakers.Host
             builder.Services.AddScoped<CategoryRepository>();
             builder.Services.AddScoped<CategorySyncService>();
 
+            builder.Services.AddScoped<LabelRepository>();
+            builder.Services.AddScoped<RecordRepository>();
+            builder.Services.AddScoped<RecordSyncService>();
+
+            builder.Services.AddScoped<SyncStepRunner>();
+
             using IHost host = builder.Build();
 
             using (IServiceScope scope = host.Services.CreateScope())
             {
+                SyncStepRunner syncStepRunner = scope.ServiceProvider.GetRequiredService<SyncStepRunner>();
+
                 WalletSyncDbContext dbContext = scope.ServiceProvider.GetRequiredService<WalletSyncDbContext>();
                 await dbContext.Database.EnsureCreatedAsync();
 
                 AccountSyncService accountSyncService = scope.ServiceProvider.GetRequiredService<AccountSyncService>();
-                Result result = await accountSyncService.SyncAsync();
+                bool accountSyncSucceeded = await syncStepRunner.RunAsync(
+                    "Account",
+                    accountSyncService.SyncAsync,
+                    dbContext.Accounts,
+                    account => $" - {account.ExternalId} | {account.Name} ({account.CurrencyCode})");
 
-                if (result.IsFailed)
-                {
-                    Console.WriteLine("Account sync failed:");
-                    foreach (IError error in result.Errors)
-                        Console.WriteLine($" - {error.Message}");
-
+                if (!accountSyncSucceeded)
                     return;
-                }
-
-                Console.WriteLine("Account sync completed successfully.");
-                foreach (DataAccount account in dbContext.Accounts)
-                    Console.WriteLine($" - {account.ExternalId} | {account.Name} ({account.CurrencyCode})");
 
                 CategorySyncService categorySyncService = scope.ServiceProvider.GetRequiredService<CategorySyncService>();
-                Result categoryResult = await categorySyncService.SyncAsync();
+                bool categorySyncSucceeded = await syncStepRunner.RunAsync(
+                    "Category",
+                    categorySyncService.SyncAsync,
+                    dbContext.Categories,
+                    category => $" - {category.ExternalId} | {category.Name} ({category.GroupName})");
 
-                if (categoryResult.IsFailed)
-                {
-                    Console.WriteLine("Category sync failed:");
-                    foreach (IError error in categoryResult.Errors)
-                        Console.WriteLine($" - {error.Message}");
-
+                if (!categorySyncSucceeded)
                     return;
-                }
 
-                Console.WriteLine("Category sync completed successfully.");
-                foreach (DataCategory category in dbContext.Categories)
-                    Console.WriteLine($" - {category.ExternalId} | {category.Name} ({category.GroupName})");
+                RecordSyncService recordSyncService = scope.ServiceProvider.GetRequiredService<RecordSyncService>();
+                bool recordSyncSucceeded = await syncStepRunner.RunAsync(
+                    "Record",
+                    recordSyncService.SyncAsync,
+                    dbContext.Records,
+                    record => $" - {record.ExternalId} | {record.Description} ({record.Amount})");
+
+                if (!recordSyncSucceeded)
+                    return;
             }
         }
     }

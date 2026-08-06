@@ -84,6 +84,11 @@ namespace Wallet.Sync.BudgetBakers.Host.Synchronization
                 foreach (DataCategory category in result.Value)
                     await _categoryRepository.UpsertAsync(category, cancellationToken);
 
+                // Assign local ids to newly inserted categories before resolving parent references,
+                // since a child category's parent may have just been inserted in this same batch.
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _categoryRepository.ResolveParentsAsync(cancellationToken);
+
                 syncState.LastSyncedAt = syncStartedAt;
                 syncState.Status = SyncStatus.Succeeded;
                 syncState.LastError = null;

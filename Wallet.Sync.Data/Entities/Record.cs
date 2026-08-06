@@ -23,5 +23,7 @@ namespace Wallet.Sync.Data.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public IList<ExpenseDocument> ExpenseDocuments { get; set; } = [];
+        public IList<Label> Labels { get; set; } = [];
+        public string? Note { get; set; }
     }
 }

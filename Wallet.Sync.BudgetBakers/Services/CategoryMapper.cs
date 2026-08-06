@@ -18,6 +18,7 @@ namespace Wallet.Sync.BudgetBakers.Services
                 GroupId = source.Group!.Id!,
                 GroupName = source.Group!.Name!,
                 Color = source.Color,
+                ParentExternalId = source.ParentId,
                 CreatedAt = source.CreatedAt ?? default,
                 UpdatedAt = source.UpdatedAt ?? default
             };

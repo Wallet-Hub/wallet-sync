@@ -32,16 +32,28 @@ namespace Wallet.Sync.BudgetBakers.Services
                 ConvertTo = "EUR"
             };
 
+            List<DateFilter> recordDateFilters = [];
+
             if (filter.MinimumDate.HasValue)
             {
-                DateFilter dateFilter = new()
+                recordDateFilters.Add(new DateFilter
                 {
                     Prefix = RangePrefix.GreaterThanOrEqual,
                     Value = filter.MinimumDate.Value
-                };
-
-                recordsRequest.RecordDate = [dateFilter];
+                });
             }
+
+            if (filter.MaximumDate.HasValue)
+            {
+                recordDateFilters.Add(new DateFilter
+                {
+                    Prefix = RangePrefix.LessThanOrEqual,
+                    Value = filter.MaximumDate.Value
+                });
+            }
+
+            if (recordDateFilters.Count > 0)
+                recordsRequest.RecordDate = recordDateFilters;
 
             if (filter.MinimumUpdatedAt.HasValue)
             {

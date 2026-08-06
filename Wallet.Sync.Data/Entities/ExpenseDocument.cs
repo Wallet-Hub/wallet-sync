@@ -10,7 +10,7 @@ namespace Wallet.Sync.Data.Entities
         public int RecordId { get; set; }
         public Record? Record { get; set; }
         public int ProviderId { get; set; }
-        public ExpenseDocumentProvider? Provider { get; set; }
+        public ExternalProvider? Provider { get; set; }
         public Uri Url { get; set; } = null!;
         public string? Description { get; set; }
     }

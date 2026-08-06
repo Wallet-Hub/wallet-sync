@@ -19,8 +19,11 @@ namespace Wallet.Sync.Data.EfCore
         public DbSet<Account> Accounts => Set<Account>();
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Record> Records => Set<Record>();
+        public DbSet<Label> Labels => Set<Label>();
         public DbSet<ExpenseDocument> ExpenseDocuments => Set<ExpenseDocument>();
-        public DbSet<ExpenseDocumentProvider> ExpenseDocumentProviders => Set<ExpenseDocumentProvider>();
+        public DbSet<ExternalProvider> ExternalProviders => Set<ExternalProvider>();
+        public DbSet<ExternalProviderAccount> ExternalProviderAccounts => Set<ExternalProviderAccount>();
+        public DbSet<ExternalProviderTransaction> ExternalProviderTransactions => Set<ExternalProviderTransaction>();
         public DbSet<SyncState> SyncStates => Set<SyncState>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
