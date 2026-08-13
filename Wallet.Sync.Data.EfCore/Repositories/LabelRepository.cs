@@ -40,6 +40,16 @@ namespace Wallet.Sync.Data.EfCore.Repositories
                 .Where(l => externalIds.Contains(l.ExternalId))
                 .ToDictionaryAsync(l => l.ExternalId, cancellationToken);
 
+            //Also consider labels already tracked in this unit of work (e.g. added earlier in the same batch but
+            //not yet saved), so we don't create duplicate entities that would violate the ExternalId unique constraint.
+            foreach (DataLabel trackedLabel in _dbContext.ChangeTracker.Entries<DataLabel>()
+                         .Where(e => e.State != EntityState.Detached && e.State != EntityState.Deleted)
+                         .Select(e => e.Entity))
+            {
+                if (externalIds.Contains(trackedLabel.ExternalId))
+                    existingByExternalId[trackedLabel.ExternalId] = trackedLabel;
+            }
+
             List<DataLabel> resolved = [];
 
             foreach (DataLabel sourceLabel in sourceLabels)
