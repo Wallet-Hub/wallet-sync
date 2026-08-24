@@ -1,4 +1,4 @@
-namespace Wallet.Sync.BudgetBakers.Host
+namespace Wallet.Sync.BudgetBakers.Host.Configuration
 {
     /// <summary>
     /// Options bound to the "BudgetBakers" section of appsettings.json.

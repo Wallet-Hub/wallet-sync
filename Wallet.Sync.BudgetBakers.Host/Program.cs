@@ -10,6 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Serilog;
+using Wallet.Sync.BudgetBakers.Host.Configuration;
+using Wallet.Sync.BudgetBakers.Host.Extensions;
 using Wallet.Sync.BudgetBakers.Host.Synchronization;
 using Wallet.Sync.BudgetBakers.Models;
 using Wallet.Sync.BudgetBakers.Services;
@@ -29,10 +32,20 @@ namespace Wallet.Sync.BudgetBakers.Host
             HostApplicationBuilder builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(args);
             builder.Configuration.AddUserSecrets<Program>();
 
+            builder.Services.AddSerilog((services, loggerConfiguration) =>
+            {
+                loggerConfiguration
+                    .ReadFrom.Configuration(builder.Configuration)
+                    .ReadFrom.Services(services)
+                    .Enrich.FromLogContext();
+            });
+
             builder.Services.Configure<BudgetBakersOptions>(builder.Configuration.GetSection(BudgetBakersOptions.SectionName));
             builder.Services.Configure<AccountFilter>(builder.Configuration.GetSection(nameof(AccountFilter)));
             builder.Services.Configure<CategoryFilter>(builder.Configuration.GetSection(nameof(CategoryFilter)));
             builder.Services.Configure<RecordFilter>(builder.Configuration.GetSection(nameof(RecordFilter)));
+
+            builder.AddFileSystemSecrets();
 
             builder.Services.AddSingleton<IAccessTokenProvider, ConfigurationAccessTokenProvider>();
             builder.Services.AddWalletClient<AccountClient>();

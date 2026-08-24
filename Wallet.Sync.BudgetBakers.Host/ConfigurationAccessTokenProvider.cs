@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BudgetBakers.Wallet.Net.Services;
 using Microsoft.Extensions.Options;
+using Wallet.Sync.BudgetBakers.Host.Configuration;
 
 namespace Wallet.Sync.BudgetBakers.Host
 {

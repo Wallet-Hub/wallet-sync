@@ -44,8 +44,9 @@ namespace Wallet.Sync.BudgetBakers.Host.Synchronization
             }
 
             _logger.LogInformation("{EntityType} sync completed successfully.", entityTypeName);
+
             foreach (TEntity entity in syncedEntities)
-                _logger.LogInformation("{EntityDescription}", describeEntity(entity));
+                _logger.LogTrace("{EntityDescription}", describeEntity(entity));
 
             return true;
         }
