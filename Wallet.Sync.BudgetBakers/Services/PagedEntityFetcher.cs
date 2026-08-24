@@ -44,6 +44,8 @@ namespace Wallet.Sync.BudgetBakers.Services
                 EntityPage<TEntity> page = pageResult.Value;
                 retrievedEntities.AddRange(page.Items);
 
+                _logger.LogDebug("Retrieved {Count} {EntityType} entities", page.Items.Count, typeof(TEntity).Name);
+
                 hasMorePages = page.Items.Count == filter.PageLength
                     && (page.Pagination.Total is null || retrievedEntities.Count < page.Pagination.Total.Value);
 
