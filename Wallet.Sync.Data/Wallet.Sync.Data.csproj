@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId>WalletHub.Sync.Data</PackageId>
+    <RepositoryUrl>https://github.com/Wallet-Hub/wallet-sync</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
