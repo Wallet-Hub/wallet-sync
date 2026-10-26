@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Wallet.Sync.Data.EfCore.Configurations;
 using Wallet.Sync.Data.EfCore.Entities;
 using Wallet.Sync.Data.Entities;
 
@@ -28,7 +29,15 @@ namespace Wallet.Sync.Data.EfCore
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(WalletSyncDbContext).Assembly);
+            modelBuilder.ApplyConfiguration(new AccountConfiguration());
+            modelBuilder.ApplyConfiguration(new CategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new ExpenseDocumentConfiguration());
+            modelBuilder.ApplyConfiguration(new ExternalProviderAccountConfiguration());
+            modelBuilder.ApplyConfiguration(new ExternalProviderConfiguration());
+            modelBuilder.ApplyConfiguration(new ExternalProviderTransactionConfiguration());
+            modelBuilder.ApplyConfiguration(new LabelConfiguration());
+            modelBuilder.ApplyConfiguration(new RecordConfiguration());
+            modelBuilder.ApplyConfiguration(new SyncStateConfiguration());
         }
     }
 }
